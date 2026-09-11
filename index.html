@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>City Life RP</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:#080b0f;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;touch-action:none}
+#game{position:fixed;inset:0;background:#111820}
+canvas{display:block;width:100%;height:100%}
+#hud{position:fixed;top:max(8px,env(safe-area-inset-top));left:8px;right:8px;display:grid;grid-template-columns:1fr 1fr;gap:6px;pointer-events:none}
+.card{background:linear-gradient(180deg,#121923ed,#0b1016e8);border:1px solid #ffffff18;border-radius:14px;padding:7px 9px;box-shadow:0 8px 25px #0008;font-size:11px}
+.card b{font-size:13px}
+.bar{height:4px;background:#ffffff12;border-radius:8px;overflow:hidden;margin-top:4px}.bar i{display:block;height:100%;width:0;background:#6dd5ff}
+#topBtns{position:fixed;right:8px;top:max(8px,env(safe-area-inset-top));display:flex;gap:6px;pointer-events:auto}
+.iconBtn{width:42px;height:42px;border-radius:13px;background:#0d141de8;border:1px solid #ffffff18;color:#fff;font-size:18px}
+#controls{position:fixed;left:0;right:0;bottom:max(10px,env(safe-area-inset-bottom));display:flex;justify-content:space-between;align-items:end;padding:0 10px;pointer-events:none}
+#joy{width:112px;height:112px;border-radius:50%;background:#ffffff0e;border:2px solid #ffffff1c;position:relative;pointer-events:auto;box-shadow:0 10px 30px #0007}
+#stick{position:absolute;width:48px;height:48px;left:30px;top:30px;border-radius:50%;background:#ffffff28;border:1px solid #ffffff38}
+.actions{display:grid;grid-template-columns:repeat(3,54px);gap:6px;pointer-events:auto}
+button{width:54px;height:54px;border:1px solid #ffffff22;border-radius:15px;background:#0d141de8;color:#fff;font-weight:800;font-size:10px;box-shadow:0 8px 18px #0007}
+button:active{transform:scale(.95);background:#27313d}
+.primary{background:#255f87}.gold{background:#70551f}.green{background:#275d42}
+#hint{position:fixed;left:50%;transform:translateX(-50%);bottom:132px;background:#0d141de8;border:1px solid #ffffff20;border-radius:12px;padding:8px 12px;font-size:11px;display:none;white-space:nowrap}
+#toast{position:fixed;left:50%;top:75px;transform:translateX(-50%);background:#101720f2;padding:9px 13px;border-radius:12px;display:none;border:1px solid #ffffff1c;z-index:10;font-size:12px}
+#panel{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(94vw,460px);max-height:84vh;overflow:auto;background:#0c1219f8;border:1px solid #ffffff1c;border-radius:22px;padding:16px;display:none;box-shadow:0 25px 70px #000b;z-index:20}
+#panel h2{margin:0 0 5px;font-size:21px}.sub{opacity:.66;font-size:11px;line-height:1.4;margin-bottom:8px}
+.row{display:flex;justify-content:space-between;gap:8px;align-items:center;border-top:1px solid #ffffff10;padding:10px 0}.row b{font-size:13px}.small{opacity:.65;font-size:10px;line-height:1.35}
+.buy,.close{width:auto;height:38px;padding:0 12px;border-radius:11px;border:0}.buy{background:#286e4b}.close{background:#303a46}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.tile{padding:12px;border:1px solid #ffffff12;background:#111923;border-radius:15px}.tile button{width:100%;height:42px;margin-top:7px}
+input,select{width:100%;background:#0a1016;border:1px solid #ffffff18;color:#fff;border-radius:10px;padding:9px}
+.stat{display:flex;justify-content:space-between;padding:4px 0;font-size:11px}
+.badge{display:inline-block;padding:3px 6px;border-radius:7px;background:#ffffff10;font-size:9px;margin-left:4px}
+
+#chat{position:fixed;left:8px;right:8px;bottom:132px;height:155px;background:#091018e8;border:1px solid #ffffff18;border-radius:16px;padding:8px;display:none;z-index:12;box-shadow:0 15px 40px #0009}
+#chatlog{height:108px;overflow:auto;font-size:11px;line-height:1.45;padding:2px 4px}.chatline{margin:2px 0}.sys{opacity:.65}.admin{color:#ffd86b}.cmd{color:#8fd5ff}
+#chatbar{display:flex;gap:6px;margin-top:5px}.chatinput{flex:1;min-width:0;height:36px!important;width:auto!important;padding:0 10px!important;border-radius:10px!important;background:#0e1720!important;color:#fff!important;border:1px solid #ffffff18!important}
+#chatSend{width:64px!important;height:36px!important}
+#adminBadge{display:none;position:fixed;top:78px;right:10px;background:#7b5b16;color:#fff;padding:5px 8px;border-radius:9px;font-size:9px;z-index:11}
+</style>
+<style>
+/* City Life RP — Landscape HD visual pass */
+:root{
+  --hud-bg: rgba(7,12,20,.82);
+  --hud-border: rgba(255,255,255,.14);
+  --glass: rgba(14,20,31,.72);
+  --accent: #55c7ff;
+}
+html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#071018}
+body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+#game,canvas{width:100vw!important;height:100vh!important;display:block}
+@media (orientation: landscape){
+  #game, .game, .app, #app{min-width:100vw;min-height:100vh}
+}
+.hud,.topbar,.panel,.modal,.chat,.inventory,.garage,.shop{
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border:1px solid var(--hud-border);
+  box-shadow:0 12px 35px rgba(0,0,0,.28);
+}
+button{
+  border-radius:12px!important;
+  border:1px solid rgba(255,255,255,.15)!important;
+  box-shadow:0 5px 16px rgba(0,0,0,.22);
+}
+</style></head>
+<body>
+<div id="game"><canvas id="c"></canvas></div>
+
+<div id="hud">
+  <div class="card">💰 <b id="money">50 000 ₽</b><div class="bar"><i id="xpbar"></i></div></div>
+  <div class="card">⭐ Ур. <b id="level">1</b> · XP <b id="xp">0</b></div>
+  <div class="card">🏠 <b id="props">0</b> · 🚗 <b id="cars">1</b></div>
+  <div class="card">🎰 Фишки <b id="chips">1 000</b></div>
+</div>
+<div id="topBtns"><button class="iconBtn" id="chatBtn">💬</button><button class="iconBtn" id="mapBtn">🗺️</button><button class="iconBtn" id="menuBtn">☰</button></div>
+<div id="hint"></div><div id="toast"></div>
+
+<div id="adminBadge">ADMIN</div><div id="chat"><div id="chatlog"></div><div id="chatbar"><input id="chatInput" class="chatinput" autocomplete="off" placeholder="Сообщение или /help"><button id="chatSend">OK</button></div></div><div id="controls">
+  <div id="joy"><div id="stick"></div></div>
+  <div class="actions">
+    <button id="act" class="primary">ДЕЙСТВИЕ</button>
+    <button id="car">🚗<br>АВТО</button>
+    <button id="tune" class="gold">🔧<br>ТЮНИНГ</button>
+    <button id="auction">🔨<br>АУКЦИОН</button>
+    <button id="casino">🎰<br>КАЗИНО</button>
+    <button id="jobs" class="green">💼<br>РАБОТА</button>
+  </div>
+</div>
+<div id="panel"></div>
+
+<script>
+const c=document.getElementById('c'),ctx=c.getContext('2d');
+let W=innerWidth,H=innerHeight,D=devicePixelRatio||1;
+function resize(){W=innerWidth;H=innerHeight;D=Math.min(2,devicePixelRatio||1);c.width=W*D;c.height=H*D;ctx.setTransform(D,0,0,D,0,0)}addEventListener('resize',resize);resize();
+
+const world={w:5000,h:3600};
+let p={x:2500,y:1800,ang:0,inCar:false};
+let money=50000,chips=1000,level=1,xp=0,props=[],ownedBusiness=[],cars=[
+ {name:'Lada Granta',price:35000,color:'#b8c1ca',power:100,turbo:0,engine:0,brakes:0,wheels:0,paint:0,vinyl:0}
+],activeCar=0;
+let cam={x:0,y:0};
+const properties=[
+{name:'Комната «Старт»',type:'Комната',price:18000,x:720,y:640},{name:'Студия «Центр»',type:'Квартира',price:90000,x:2050,y:1150},
+{name:'2-комнатная «Север»',type:'Квартира',price:165000,x:3650,y:650},{name:'Семейный дом',type:'Дом',price:380000,x:900,y:2750},
+{name:'Премиум-вилла',type:'Дом',price:950000,x:3850,y:2850},{name:'Гараж №7',type:'Гараж',price:75000,x:1450,y:3000},
+{name:'Автосервис',type:'Бизнес',price:650000,x:3000,y:3000},{name:'Кофейня «Порт»',type:'Бизнес',price:480000,x:4150,y:1550},
+{name:'Магазин 24/7',type:'Бизнес',price:720000,x:950,y:1500},{name:'Ночной клуб',type:'Бизнес',price:1250000,x:2700,y:700}
+];
+const models=[
+['Lada Granta',35000,'#b8c1ca',100],['VAZ 2107',55000,'#bfc2c7',90],['Lada Vesta',170000,'#73879a',122],['Kia Rio',420000,'#8f4d55',123],
+['Toyota Camry',950000,'#292e34',181],['BMW M5',2200000,'#4e5b68',625],['Mercedes E63',2800000,'#d4d6d8',612],
+['Gelandewagen',3500000,'#202327',585],['Porsche 911',4200000,'#a43f3f',580],['Lamborghini Huracan',8500000,'#9aab40',640]
+];
+const auctionCars=[
+{name:'BMW M4 Competition',price:3100000,color:'#6d7882',power:510,bid:2700000},{name:'Nissan GT-R',price:4800000,color:'#30343b',power:570,bid:3900000},
+{name:'Toyota Supra',price:2700000,color:'#a4513d',power:387,bid:2200000},{name:'Audi RS7',price:5200000,color:'#7e8288',power:600,bid:4300000},
+{name:'Mercedes AMG GT',price:6100000,color:'#555f68',power:585,bid:5100000}
+];
+const roads=[];for(let x=300;x<world.w;x+=600)roads.push({x,vert:true});for(let y=300;y<world.h;y+=520)roads.push({y,vert:false});
+const buildings=[];for(let gx=0;gx<world.w;gx+=600)for(let gy=0;gy<world.h;gy+=520)buildings.push({x:gx+60,y:gy+60,w:480,h:390});
+const npcs=[];for(let i=0;i<65;i++)npcs.push({x:250+Math.random()*4500,y:250+Math.random()*3100,a:Math.random()*6.28,t:Math.random()*10});
+const traffic=[];for(let i=0;i<28;i++)traffic.push({x:300+Math.random()*4400,y:300+Math.random()*3000,a:Math.random()*6.28,s:1+Math.random()*2.2,color:['#d64c4c','#d5d8da','#3e6d9c','#b7a33f'][i%4]});
+
+function moneyFmt(n){return Math.round(n).toLocaleString('ru-RU')+' ₽'}
+function numFmt(n){return Math.round(n).toLocaleString('ru-RU')}
+function toast(s){let t=document.getElementById('toast');t.textContent=s;t.style.display='block';clearTimeout(window.tt);window.tt=setTimeout(()=>t.style.display='none',1800)}
+function updateHud(){moneyEl.textContent=moneyFmt(money);document.getElementById('props').textContent=props.length;document.getElementById('cars').textContent=cars.length;document.getElementById('level').textContent=level;document.getElementById('xp').textContent=xp;document.getElementById('chips').textContent=numFmt(chips);document.getElementById('xpbar').style.width=Math.min(100,xp/(level*100)*100)+'%'}
+const moneyEl=document.getElementById('money');updateHud();
+
+function nearestProp(){let best=null,bd=1e9;for(const q of properties){let d=Math.hypot(q.x-p.x,q.y-p.y);if(d<bd){bd=d;best=q}}return bd<170?best:null}
+function addXP(n){xp+=n;while(xp>=level*100){xp-=level*100;level++;toast('Новый уровень: '+level)}updateHud()}
+function buyProperty(q){if(props.includes(q.name)){toast('Уже куплено');return}if(money<q.price){toast('Не хватает денег');return}money-=q.price;props.push(q.name);if(q.type==='Бизнес')ownedBusiness.push(q.name);addXP(80);toast('Куплено: '+q.name)}
+function buyModel(i){const [name,price,color,power]=models[i];if(money<price){toast('Не хватает денег');return}cars.push({name,price,color,power,turbo:0,engine:0,brakes:0,wheels:0,paint:0,vinyl:0});money-=price;activeCar=cars.length-1;addXP(60);toast('Куплена: '+name)}
+function closePanel(){document.getElementById('panel').style.display='none'}
+function panel(title,body){const el=document.getElementById('panel');el.innerHTML='<h2>'+title+'</h2>'+body+'<div style="margin-top:12px"><button class="close" onclick="closePanel()">Закрыть</button></div>';el.style.display='block'}
+window.closePanel=closePanel;
+
+function carPanel(){
+let s='<div class="sub">Автосалон. Купленные машины доступны в гараже и для тюнинга.</div>';
+models.forEach((q,i)=>s+=`<div class="row"><div><b>${q[0]}</b><div class="small">${moneyFmt(q[1])} · ${q[3]} л.с.</div></div><button class="buy" onclick="buyModel(${i})">Купить</button></div>`);
+s+='<div class="row"><div><b>Активная машина</b><div class="small">'+cars[activeCar].name+'</div></div><button class="buy" onclick="garagePanel()">Гараж</button></div>';
+panel('🚗 Автосалон',s)
+}
+window.buyModel=buyModel;
+
+function garagePanel(){
+let s='<div class="sub">Выбирай активную машину. Улучшения сохраняются отдельно для каждой.</div>';
+cars.forEach((q,i)=>s+=`<div class="row"><div><b>${q.name}</b><div class="small">${q.power+q.turbo*35+q.engine*20} л.с. · тюнинг ${q.turbo+q.engine+q.brakes+q.wheels+q.paint+q.vinyl}/6</div></div><button class="buy" onclick="activeCar=${i};closePanel();toast('Выбрана: ${q.name}')">${activeCar===i?'Выбрана':'Выбрать'}</button></div>`);
+panel('🏁 Гараж',s)
+}
+window.garagePanel=garagePanel;
+
+const tuneItems=[
+['turbo','Турбина',120000,'+35 л.с.'],['engine','Чип/двигатель',90000,'+20 л.с.'],['brakes','Спорт-тормоза',65000,'лучше торможение'],
+['wheels','Легкосплавные диски',80000,'управляемость'],['paint','Покраска',45000,'новый цвет'],['vinyl','Винил',60000,'уникальный стиль']
+];
+function tunePanel(){
+const q=cars[activeCar];let s=`<div class="sub"><b>${q.name}</b> · ${q.power+q.turbo*35+q.engine*20} л.с. · активный слот №${activeCar+1}</div><div class="grid2">`;
+tuneItems.forEach(it=>{let lvl=q[it[0]];s+=`<div class="tile"><b>${it[1]}</b><div class="small">${it[3]}<br>Ур. ${lvl}/3 · ${moneyFmt(it[2])}</div><button class="buy" onclick="upgrade('${it[0]}',${it[2]})">${lvl>=3?'MAX':'Улучшить'}</button></div>`});s+='</div>';
+panel('🔧 Тюнинг',s)
+}
+function upgrade(k,cost){let q=cars[activeCar];if(q[k]>=3){toast('Максимальный уровень');return}if(money<cost){toast('Не хватает денег');return}money-=cost;q[k]++;if(k==='paint'){q.color=['#b8c1ca','#b64b4b','#4d79b8','#c6a53b'][q[k]]||'#d8d8d8'}addXP(20);toast('Улучшено: '+k);tunePanel()}
+window.tunePanel=tunePanel;window.upgrade=upgrade;
+
+function auctionPanel(){
+let s='<div class="sub">Аукцион использует игровую валюту. Лоты обновляются локально; ставки не являются реальными деньгами.</div>';
+auctionCars.forEach((q,i)=>s+=`<div class="row"><div><b>${q.name}</b><div class="small">${q.power} л.с. · текущая ставка ${moneyFmt(q.bid)}</div></div><button class="buy" onclick="bidAuction(${i})">Ставка</button></div>`);
+s+='<div class="row"><div><b>Продать свою машину</b><div class="small">Моментальная продажа за 65% от базовой цены + 5% за каждый уровень тюнинга.</div></div><button class="buy" onclick="sellActive()">Продать</button></div>';
+panel('🔨 Аукцион',s)
+}
+function bidAuction(i){let q=auctionCars[i],bid=q.bid+Math.max(50000,Math.round(q.bid*.08));if(money<bid){toast('Не хватает на ставку');return}money-=bid;cars.push({name:q.name,price:q.price,color:q.color,power:q.power,turbo:0,engine:0,brakes:0,wheels:0,paint:0,vinyl:0});activeCar=cars.length-1;q.bid=bid;addXP(100);toast('Вы выиграли лот: '+q.name);auctionPanel()}
+function sellActive(){if(cars.length<=1){toast('Нельзя продать последнюю машину');return}let q=cars[activeCar],levels=q.turbo+q.engine+q.brakes+q.wheels+q.paint+q.vinyl;let val=q.price*.65*(1+levels*.05);money+=val;cars.splice(activeCar,1);activeCar=Math.max(0,activeCar-1);updateHud();toast('Продано за '+moneyFmt(val));auctionPanel()}
+window.auctionPanel=auctionPanel;window.bidAuction=bidAuction;window.sellActive=sellActive;
+
+function slots(){
+let syms=['🍒','🍋','🔔','💎','7️⃣','⭐'],a=syms[Math.floor(Math.random()*6)],b=syms[Math.floor(Math.random()*6)],d=syms[Math.floor(Math.random()*6)];
+let bet=100,win=0;if(a===b&&b===d)win=bet*20;else if(a===b||b===d||a===d)win=bet*2;chips-=bet+0;if(win)chips+=bet+win;return `${a} ${b} ${d} · ${win?'Выигрыш +'+win:'Пусто'}`}
+function roulette(){
+let bet=100;if(chips<bet){toast('Не хватает фишек');return}chips-=bet;let n=Math.floor(Math.random()*37);let win=(n===0?bet*35:(n%2===0?bet*2:0));if(win)chips+=win;return `Выпало ${n}. ${win?'Выигрыш +'+win:'Проигрыш -'+bet}`
+}
+function blackjack(){
+let bet=100;if(chips<bet){toast('Не хватает фишек');return}chips-=bet;let a=2+Math.floor(Math.random()*10),b=2+Math.floor(Math.random()*10),dealer=2+Math.floor(Math.random()*10),sum=a+b;
+if(sum>21)return `Перебор: ${sum}. -${bet}`;
+if(sum>dealer){chips+=bet*2;return `21? У вас ${sum}, у дилера ${dealer}. +${bet}`};if(sum===dealer){chips+=bet;return `Ничья. Фишки возвращены`};return `У вас ${sum}, у дилера ${dealer}. -${bet}`
+}
+function casinoPanel(){
+let s='<div class="sub">Только виртуальные фишки внутри игры. Без пополнений, вывода денег и реальных ставок.</div><div class="tile"><b>🎰 Слоты</b><div class="small">100 фишек · пара = x2, три одинаковых = x20</div><button onclick="casinoPlay(\'slots\')">Крутить</button></div><div class="tile" style="margin-top:8px"><b>🎡 Рулетка</b><div class="small">100 фишек · чётное = x2, зеро = x35</div><button onclick="casinoPlay(\'roulette\')">Крутить</button></div><div class="tile" style="margin-top:8px"><b>🃏 Блэкджек</b><div class="small">100 фишек · упрощённый раунд против дилера</div><button onclick="casinoPlay(\'blackjack\')">Играть</button></div><div class="row"><b>Баланс фишек</b><b>${numFmt(chips)}</b></div>';
+panel('🎰 Казино',s)
+}
+function casinoPlay(g){let r=g==='slots'?slots():g==='roulette'?roulette():blackjack();updateHud();toast(r||'');casinoPanel()}
+window.casinoPlay=casinoPlay;
+
+function propertyPanel(){
+let s='<div class="sub">Недвижимость, гаражи и бизнесы. Бизнесы дают пассивный доход раз в 60 секунд.</div>';
+properties.forEach((q,i)=>{let own=props.includes(q.name);s+=`<div class="row"><div><b>${q.name}</b><div class="small">${q.type} · ${moneyFmt(q.price)}</div></div><button class="buy" ${own?'disabled':''} onclick="buyProperty(properties[${i}])">${own?'Куплено':'Купить'}</button></div>`});
+panel('🏠 Недвижимость',s)
+}
+window.propertyPanel=propertyPanel;
+
+function jobPanel(){
+let jobs=[['Таксист',1200],['Курьер',900],['Дальнобойщик',3500],['Механик',1800],['Уличный гонщик',5000]];
+let s='<div class="sub">Быстрые активности. Чем выше уровень, тем выше доход.</div>';
+jobs.forEach(j=>s+=`<div class="row"><div><b>${j[0]}</b><div class="small">Награда ${moneyFmt(j[1]+(level-1)*150)}</div></div><button class="buy" onclick="job('${j[0]}',${j[1]})">Взять</button></div>`);
+panel('💼 Работа',s)
+}
+function job(name,reward){let r=reward+(level-1)*150;money+=r;addXP(35);toast(name+': +'+moneyFmt(r));updateHud()}
+window.job=job;
+
+function menuPanel(){
+panel('☰ Город','<div class="grid2"><div class="tile"><b>💾 Сохранение</b><div class="small">Автосохранение в браузере/приложении.</div><button onclick="saveGame()">Сохранить</button></div><div class="tile"><b>🔄 Сброс</b><div class="small">Начать карьеру заново.</div><button onclick="resetGame()">Сбросить</button></div><div class="tile"><b>🎁 Бонус</b><div class="small">Ежедневный игровой бонус.</div><button onclick="dailyBonus()">Получить</button></div><div class="tile"><b>ℹ️ Версия</b><div class="small">City Life RP Mobile 2.0</div></div></div>')
+}
+function saveGame(){localStorage.setItem('clrpsave',JSON.stringify({money,chips,level,xp,props,ownedBusiness,cars,activeCar}));toast('Игра сохранена')}
+function loadGame(){try{let s=JSON.parse(localStorage.getItem('clrpsave'));if(!s)return;({money,chips,level,xp,props,ownedBusiness,cars,activeCar} = s)}catch(e){}updateHud()}
+function resetGame(){if(confirm('Сбросить прогресс?')){localStorage.removeItem('clrpsave');location.reload()}}
+function dailyBonus(){let key='clrbonus_'+new Date().toISOString().slice(0,10);if(localStorage.getItem(key)){toast('Бонус уже получен сегодня');return}localStorage.setItem(key,'1');money+=5000;chips+=250;updateHud();toast('Ежедневный бонус: +5 000 ₽ и +250 фишек')}
+window.saveGame=saveGame;window.resetGame=resetGame;window.dailyBonus=dailyBonus;
+loadGame();
+
+document.getElementById('shop').onclick=propertyPanel;
+document.getElementById('car').onclick=carPanel;
+document.getElementById('tune').onclick=tunePanel;
+document.getElementById('auction').onclick=auctionPanel;
+document.getElementById('casino').onclick=casinoPanel;
+document.getElementById('jobs').onclick=jobPanel;
+document.getElementById('menuBtn').onclick=menuPanel;
+document.getElementById('mapBtn').onclick=()=>toast('Карта: вы находитесь в районе '+(p.x<2500?'Запад':'Восток'));
+document.getElementById('act').onclick=()=>{let q=nearestProp();if(q)panel(q.name,`<div class="sub">${q.type}. Цена: ${moneyFmt(q.price)}.</div><button class="buy" onclick="buyProperty(properties[${properties.indexOf(q)}])">Купить</button>`);else toast(p.inCar?'Вы за рулём':'Подойдите к объекту')};
+
+let keys={};addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;if(e.key==='Escape')closePanel()});addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
+let joy={x:0,y:0,active:false};const joyEl=document.getElementById('joy'),stick=document.getElementById('stick');
+function joyMove(e){let r=joyEl.getBoundingClientRect(),x=e.clientX-r.left-r.width/2,y=e.clientY-r.top-r.height/2,m=Math.min(40,Math.hypot(x,y)),a=Math.atan2(y,x);joy.x=Math.cos(a)*m/40;joy.y=Math.sin(a)*m/40;stick.style.left=(32+joy.x*25)+'px';stick.style.top=(32+joy.y*25)+'px'}
+joyEl.addEventListener('pointerdown',e=>{joy.active=true;joyMove(e);joyEl.setPointerCapture(e.pointerId)});joyEl.addEventListener('pointermove',e=>{if(joy.active)joyMove(e)});joyEl.addEventListener('pointerup',()=>{joy.active=false;joy.x=joy.y=0;stick.style.left='32px';stick.style.top='32px'});
+
+function move(){
+let ax=joy.x,ay=joy.y;if(keys.w||keys.arrowup)ay=-1;if(keys.s||keys.arrowdown)ay=1;if(keys.a||keys.arrowleft)ax=-1;if(keys.d||keys.arrowright)ax=1;
+if(ax||ay){let l=Math.hypot(ax,ay);ax/=l;ay/=l;p.ang=Math.atan2(ay,ax);let q=cars[activeCar];let sp=p.inCar?(5.4+q.turbo*.25+q.engine*.12):2.7;p.x+=ax*sp;p.y+=ay*sp}
+p.x=Math.max(30,Math.min(world.w-30,p.x));p.y=Math.max(30,Math.min(world.h-30,p.y))
+}
+
+function roundedRect(x,y,w,h,r){ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill()}
+function drawRoads(){
+ctx.fillStyle='#252b31';ctx.fillRect(0,0,world.w,world.h);
+for(let i=0;i<12;i++){let x=100+(i*421)%4700,y=100+(i*677)%3300;ctx.fillStyle=i%2?'#1b4a34':'#214c38';roundedRect(x,y,230,150,20);for(let t=0;t<7;t++){ctx.fillStyle='#376a47';ctx.beginPath();ctx.arc(x+20+t*32,y+30+(t%2)*45,12,0,7);ctx.fill()}}
+ctx.fillStyle='#343a40';roads.forEach(r=>{if(r.vert)ctx.fillRect(r.x-92,0,184,world.h);else ctx.fillRect(0,r.y-92,world.w,184)});
+ctx.strokeStyle='#d0b35a';ctx.lineWidth=3;ctx.setLineDash([28,28]);roads.forEach(r=>{ctx.beginPath();if(r.vert){ctx.moveTo(r.x,0);ctx.lineTo(r.x,world.h)}else{ctx.moveTo(0,r.y);ctx.lineTo(world.w,r.y)}ctx.stroke()});ctx.setLineDash([]);
+}
+function drawBuildings(){
+buildings.forEach((b,i)=>{ctx.fillStyle=i%3===0?'#202a32':i%3===1?'#27313a':'#1c262d';roundedRect(b.x,b.y,b.w,b.h,18);ctx.fillStyle='#111820';roundedRect(b.x+14,b.y+14,b.w-28,b.h-28,14);
+for(let xx=b.x+32;xx<b.x+b.w-25;xx+=48)for(let yy=b.y+32;yy<b.y+b.h-25;yy+=42){ctx.fillStyle=(xx+yy)%3===0?'#89a1ad':'#4b6570';ctx.fillRect(xx,yy,17,10)}
+ctx.fillStyle='#d0b35a';ctx.fillRect(b.x+b.w/2-15,b.y+b.h-16,30,5)})
+}
+function drawTraffic(){
+traffic.forEach(t=>{t.x+=Math.cos(t.a)*t.s;t.y+=Math.sin(t.a)*t.s;if(t.x<50||t.x>4950)t.a=Math.PI-t.a;if(t.y<50||t.y>3550)t.a=-t.a;ctx.save();ctx.translate(t.x,t.y);ctx.rotate(t.a);ctx.fillStyle=t.color;roundedRect(-15,-7,30,14,4);ctx.fillStyle='#9fb5c0';ctx.fillRect(-6,-5,12,10);ctx.restore()})
+}
+function draw(){
+ctx.clearRect(0,0,W,H);cam.x=Math.max(0,Math.min(world.w-W,p.x-W/2));cam.y=Math.max(0,Math.min(world.h-H,p.y-H/2));
+ctx.save();ctx.translate(-cam.x,-cam.y);drawRoads();drawBuildings();
+properties.forEach(q=>{ctx.fillStyle=props.includes(q.name)?'#63c27b':'#d1a447';ctx.beginPath();ctx.arc(q.x,q.y,12,0,7);ctx.fill();ctx.fillStyle='#fff';ctx.font='11px system-ui';ctx.fillText(q.type,q.x+16,q.y+4)});
+npcs.forEach(n=>{n.x+=Math.cos(n.a)*.08;n.y+=Math.sin(n.a)*.08;if(Math.random()<.006)n.a=Math.random()*6.28;ctx.fillStyle='#c79c73';ctx.beginPath();ctx.arc(n.x,n.y,5,0,7);ctx.fill()});drawTraffic();
+ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.ang);
+if(p.inCar){let q=cars[activeCar];ctx.fillStyle=q.color;roundedRect(-26,-13,52,26,7);ctx.fillStyle='#141a20';ctx.fillRect(-12,-9,24,18);ctx.fillStyle='#111';ctx.fillRect(-23,-16,11,5);ctx.fillRect(12,-16,11,5);ctx.fillRect(-23,11,11,5);ctx.fillRect(12,11,11,5);if(q.vinyl){ctx.strokeStyle='#f1d35b';ctx.lineWidth=2;ctx.strokeRect(-18,-7,36,14)}}else{ctx.fillStyle='#4da7ff';ctx.beginPath();ctx.arc(0,0,10,0,7);ctx.fill();ctx.fillStyle='#fff';ctx.fillRect(6,-2,10,4)}
+ctx.restore();ctx.restore();
+let q=nearestProp(),h=document.getElementById('hint');if(q){h.style.display='block';h.textContent='📍 '+q.name+' · «ДЕЙСТВИЕ»'}else h.style.display='none';
+}
+let lastIncome=Date.now();function passiveIncome(){if(Date.now()-lastIncome>60000){let inc=ownedBusiness.length*800;money+=inc;lastIncome=Date.now();if(inc){updateHud();toast('Бизнесы принесли '+moneyFmt(inc))}}}
+function loop(){move();draw();passiveIncome();requestAnimationFrame(loop)}loop();
+setInterval(saveGame,15000);
+
+// CHAT + ADMIN
+let chatOpen=false, myRole=localStorage.getItem('clrp_role')||'admin', adminName=localStorage.getItem('clrp_nick')||'Owner';
+let mutedUntil=0, adminLogs=JSON.parse(localStorage.getItem('clrp_admin_logs')||'[]');
+const chat=document.getElementById('chat'), chatlog=document.getElementById('chatlog'), chatInput=document.getElementById('chatInput');
+function chatLine(t,c=''){let d=document.createElement('div');d.className='chatline '+c;d.textContent=t;chatlog.appendChild(d);chatlog.scrollTop=chatlog.scrollHeight}
+function openChat(){chatOpen=!chatOpen;chat.style.display=chatOpen?'block':'none';if(chatOpen)chatInput.focus()}
+function saveAdmin(){localStorage.setItem('clrp_admin_logs',JSON.stringify(adminLogs))}
+function isAdmin(){return myRole==='admin'||myRole==='owner'}
+function logAdmin(c){adminLogs.push({time:new Date().toLocaleString('ru-RU'),admin:adminName,cmd:c});if(adminLogs.length>100)adminLogs.shift();saveAdmin()}
+function commandHelp(){['/help — команды','/mute [мин] — мут','/unmute — снять мут','/kick — кик (демо)','/ban [мин] — бан (демо)','/warn — предупреждение','/givemoney [сумма] — выдать ₽','/givechips [сумма] — выдать фишки','/donate [сумма] — выдать донат','/setlevel [уровень] — уровень','/admin — админ-панель','/players — игроки (демо)'].forEach(x=>chatLine(x,'cmd'))}
+function amount(a){let n=parseInt(a||'0');return Number.isFinite(n)&&n>0?n:0}
+function handleCommand(raw){
+ let a=raw.slice(1).split(/\s+/),cmd=(a.shift()||'').toLowerCase();
+ if(cmd==='help'){commandHelp();return}
+ if(cmd==='admin'){if(isAdmin())adminPanel();else chatLine('Нет доступа.','sys');return}
+ if(!isAdmin()){chatLine('Недостаточно прав.','sys');return}
+ logAdmin(raw);
+ if(cmd==='mute'){let m=Math.min(120,amount(a[0])||10);mutedUntil=Date.now()+m*60000;chatLine('Система: мут на '+m+' мин.','sys')}
+ else if(cmd==='unmute'){mutedUntil=0;chatLine('Система: мут снят.','sys')}
+ else if(cmd==='kick')chatLine('Система: игрок исключён (демо).','sys');
+ else if(cmd==='ban'){let m=Math.min(1440,amount(a[0])||30);chatLine('Система: бан на '+m+' мин. (демо).','sys')}
+ else if(cmd==='warn')chatLine('Система: предупреждение выдано.','sys');
+ else if(cmd==='givemoney'){let n=amount(a[0]);money+=n;updateHud();chatLine('ADMIN: +'+moneyFmt(n),'admin')}
+ else if(cmd==='givechips'){let n=amount(a[0]);chips+=n;updateHud();chatLine('ADMIN: +'+numFmt(n)+' фишек','admin')}
+ else if(cmd==='donate'){let n=amount(a[0]);localStorage.setItem('clrp_donate',String((+localStorage.getItem('clrp_donate')||0)+n));toast('Донат +'+n);chatLine('ADMIN: донат +'+n,'admin')}
+ else if(cmd==='setlevel'){let n=Math.max(1,Math.min(100,amount(a[0])||1));level=n;xp=0;updateHud();chatLine('ADMIN: уровень '+n,'admin')}
+ else if(cmd==='players')chatLine('Игроки онлайн: Owner, Alex, Max, Nikita (демо)','sys');
+ else chatLine('Неизвестная команда. /help','sys')
+}
+function adminPanel(){
+ panel('🛡️ Админ-панель',`<div class="sub">Это офлайн-прототип. Для настоящего мультиплеера права, деньги и санкции должны проверяться сервером.</div>
+ <div class="grid2">
+ <div class="tile"><b>💰 Деньги</b><input id="admMoney" type="number" value="10000"><button class="buy" onclick="adminGiveMoney()">Выдать</button></div>
+ <div class="tile"><b>💎 Донат</b><input id="admDonate" type="number" value="100"><button class="buy" onclick="adminGiveDonate()">Выдать</button></div>
+ <div class="tile"><b>🎰 Фишки</b><input id="admChips" type="number" value="1000"><button class="buy" onclick="adminGiveChips()">Выдать</button></div>
+ <div class="tile"><b>⭐ Уровень</b><input id="admLevel" type="number" value="10"><button class="buy" onclick="adminSetLevel()">Установить</button></div></div>
+ <div class="row"><div><b>Роль</b><div class="small">${myRole.toUpperCase()} · ${adminName}</div></div><button class="buy" onclick="adminLogsPanel()">Логи</button></div>`)
+}
+function adminGiveMoney(){let n=+document.getElementById('admMoney').value||0;money+=Math.max(0,n);updateHud();logAdmin('/givemoney '+n);toast('Выдано '+moneyFmt(n));adminPanel()}
+function adminGiveDonate(){let n=+document.getElementById('admDonate').value||0;let v=(+localStorage.getItem('clrp_donate')||0)+Math.max(0,n);localStorage.setItem('clrp_donate',v);logAdmin('/donate '+n);toast('Донат +'+n);adminPanel()}
+function adminGiveChips(){let n=+document.getElementById('admChips').value||0;chips+=Math.max(0,n);updateHud();logAdmin('/givechips '+n);toast('Фишки +'+n);adminPanel()}
+function adminSetLevel(){let n=Math.max(1,Math.min(100,+document.getElementById('admLevel').value||1));level=n;xp=0;updateHud();logAdmin('/setlevel '+n);toast('Уровень '+n);adminPanel()}
+function adminLogsPanel(){let s='<div class="sub">Последние действия администратора.</div>';adminLogs.slice().reverse().slice(0,30).forEach(x=>s+=`<div class="row"><div><b>${x.cmd}</b><div class="small">${x.time} · ${x.admin}</div></div></div>`);panel('📋 Логи',s)}
+document.getElementById('chatBtn').onclick=openChat;document.getElementById('chatSend').onclick=()=>{let t=chatInput.value.trim();chatInput.value='';if(!t)return;if(Date.now()<mutedUntil){chatLine('Вы в муте.','sys');return}if(t[0]==='/')handleCommand(t);else chatLine(adminName+': '+t,isAdmin()?'admin':'')};
+chatInput.addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('chatSend').click()});
+if(isAdmin())document.getElementById('adminBadge').style.display='block';
+chatLine('Система: чат готов. Напиши /help','sys');
+</script>
+<script>
+// Landscape mode: rotate the game presentation when supported and keep touch controls usable.
+(function(){
+  const meta=document.querySelector('meta[name="viewport"]');
+  if(meta) meta.setAttribute('content','width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover');
+  document.documentElement.classList.add('landscape-rp');
+  function warnPortrait(){
+    const portrait=window.innerHeight>window.innerWidth;
+    let el=document.getElementById('orientationHint');
+    if(!el){
+      el=document.createElement('div'); el.id='orientationHint';
+      el.innerHTML='<div style="font-size:42px">↔️</div><b>Поверни iPhone горизонтально</b><small>Игра оптимизирована под широкий экран</small>';
+      Object.assign(el.style,{position:'fixed',inset:'0',zIndex:'999999',display:'none',alignItems:'center',justifyContent:'center',flexDirection:'column',gap:'10px',background:'#071018',color:'#fff',fontFamily:'system-ui',textAlign:'center'});
+      el.querySelector('small').style.opacity='.7';
+      document.body.appendChild(el);
+    }
+    el.style.display=portrait?'flex':'none';
+  }
+  window.addEventListener('resize',warnPortrait,{passive:true});
+  window.addEventListener('orientationchange',warnPortrait,{passive:true});
+  warnPortrait();
+})();
+</script></body>
+</html>
