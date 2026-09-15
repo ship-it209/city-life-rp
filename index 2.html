@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ru"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>City Life RP</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#72a768;font-family:-apple-system,BlinkMacSystemFont,Arial;color:#fff;touch-action:none}
+#app{position:fixed;inset:0;overflow:hidden}.world{position:absolute;inset:0;background:#72a768}
+.map{position:absolute;inset:-10%;background:#72a768}
+.road{position:absolute;background:#4f565d;border:2px solid #687077}
+.r1{left:0;top:40%;width:100%;height:18%}.r2{left:42%;top:0;width:16%;height:100%}
+.r3{left:0;top:72%;width:100%;height:10%;transform:rotate(-10deg);transform-origin:center}
+.line{position:absolute;background:#d9d2bc;opacity:.85}.l1{left:0;top:48%;width:100%;height:3px}.l2{left:49%;top:0;width:3px;height:100%}
+.cityblock{position:absolute;background:#bda98f;border:3px solid #7b6958;border-radius:7px;box-shadow:0 5px 0 #0002}
+.cb1{left:7%;top:17%;width:13%;height:15%}.cb2{left:23%;top:13%;width:13%;height:17%}
+.cb3{right:7%;top:10%;width:14%;height:18%}.cb4{right:23%;top:31%;width:12%;height:13%}
+.cb5{left:7%;bottom:12%;width:14%;height:17%}.cb6{left:23%;bottom:10%;width:12%;height:18%}
+.cb7{right:7%;bottom:12%;width:14%;height:18%}
+.tree{position:absolute;width:24px;height:24px;border-radius:50%;background:#367a3c;border:3px solid #2d6332;box-shadow:12px 5px 0 #3e8844,-10px 8px 0 #448d49}
+.t1{left:13%;top:22%}.t2{left:28%;top:22%}.t3{right:13%;top:20%}.t4{right:17%;bottom:19%}.t5{left:13%;bottom:20%}
+.landmark{position:absolute;background:#e0c15d;border:4px solid #8d7330;border-radius:10px;padding:7px;font-weight:900;font-size:11px;box-shadow:0 5px 0 #0002}
+.shop{left:35%;top:32%}.police{right:34%;top:32%}.hospital{left:35%;bottom:27%}
+.park{position:absolute;background:#5b9855;border:3px solid #4d8649;border-radius:20px}.p1{left:7%;top:12%;width:25%;height:24%}.p2{right:7%;bottom:10%;width:25%;height:25%}
+.b{position:absolute;background:#c7b49c;border:4px solid #806d5b;border-radius:8px}.b1{left:17%;top:23%;width:15%;height:14%}.b2{right:18%;top:17%;width:17%;height:15%}.b3{left:24%;bottom:16%;width:15%;height:15%}.b4{right:25%;bottom:23%;width:14%;height:14%}
+.car{position:absolute;left:57%;top:50%;width:64px;height:36px;background:#d43d38;border:4px solid #70201f;border-radius:10px;transform:rotate(90deg)}.car:before,.car:after{content:"";position:absolute;width:11px;height:11px;background:#111;border-radius:50%;top:-7px}.car:before{left:7px}.car:after{right:7px}
+#player{position:absolute;left:50%;top:50%;width:46px;height:58px;transform:translate(-50%,-50%);z-index:8}.head{width:25px;height:25px;margin:auto;background:#f0c49a;border:3px solid #573a2c;border-radius:50%}.body{width:31px;height:29px;margin:-1px auto 0;background:#315f9b;border:3px solid #1c395b;border-radius:8px}.name{position:absolute;top:-23px;left:50%;transform:translateX(-50%);font-size:12px;white-space:nowrap;text-shadow:0 2px 3px #000}
+#hud{position:absolute;z-index:20;top:0;left:0;right:0;padding:calc(env(safe-area-inset-top) + 7px) 9px 7px;display:flex;justify-content:space-between;pointer-events:none}.stat{background:rgba(10,15,20,.82);border:1px solid #ffffff33;border-radius:12px;padding:7px 9px;font-size:13px;font-weight:800}
+#menu,#right,#left{position:absolute;z-index:30}#menu{top:58px;left:10px;display:flex;gap:7px}#left{left:14px;bottom:12px}#right{right:14px;bottom:12px;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:7px;max-width:48%}
+button{color:#fff;background:rgba(13,18,23,.9);border:1px solid #ffffff40;border-radius:13px;padding:11px 12px;font-weight:800;font-size:12px;box-shadow:0 3px 10px #0004;touch-action:manipulation}button:active{transform:scale(.94);background:#2875c5}
+.joy{width:112px;height:112px;border-radius:50%;background:#14191e66;border:2px solid #fff4;position:relative}.knob{position:absolute;width:52px;height:52px;left:28px;top:28px;border-radius:50%;background:#ffffff88;border:2px solid #fff}
+#panel{display:none;position:absolute;z-index:50;left:50%;top:50%;transform:translate(-50%,-50%);width:min(430px,88vw);padding:20px;background:#10151bf5;border:1px solid #77818b;border-radius:18px;box-shadow:0 15px 50px #000}.close{float:right}
+@media(max-height:430px){.joy{width:90px;height:90px}.knob{width:42px;height:42px;left:23px;top:23px}button{padding:8px 9px;font-size:11px}#right{max-width:47%;gap:5px}}
+</style></head>
+<body><div id="app"><div class="world"><div class="map"></div><div class="park p1"></div><div class="park p2"></div><div class="b b1"></div><div class="b b2"></div><div class="b b3"></div><div class="b b4"></div>
+<div class="road r1"></div><div class="road r2"></div><div class="road r3"></div>
+<div class="line l1"></div><div class="line l2"></div>
+<div class="cityblock cb1"></div><div class="cityblock cb2"></div><div class="cityblock cb3"></div>
+<div class="cityblock cb4"></div><div class="cityblock cb5"></div><div class="cityblock cb6"></div><div class="cityblock cb7"></div>
+<div class="tree t1"></div><div class="tree t2"></div><div class="tree t3"></div><div class="tree t4"></div><div class="tree t5"></div>
+<div class="landmark shop">🏪 МАГАЗИН</div><div class="landmark police">🚓 ПОЛИЦИЯ</div><div class="landmark hospital">🏥 БОЛЬНИЦА</div>
+<div class="car"></div><div id="player"><div class="name">Игрок</div><div class="head"></div><div class="body"></div></div></div>
+<div id="hud"><div class="stat">💰 50 000 ₽</div><div class="stat">Ур. 1 · XP 0</div><div class="stat">🚗 1</div><div class="stat">🎟️ 1000</div></div>
+<div id="menu"><button data-a="chat">💬 Чат</button><button data-a="map">🗺️ Карта</button><button data-a="menu">☰ Меню</button></div>
+<div id="left"><div class="joy" id="joy"><div class="knob" id="knob"></div></div></div>
+<div id="right"><button data-a="action">Действие</button><button data-a="auto">🚗 Авто</button><button data-a="tune">🔧 Тюнинг</button><button data-a="auction">🔨 Аукцион</button><button data-a="casino">🎰 Казино</button><button data-a="job">💼 Работа</button></div>
+<div id="panel"><button class="close" data-a="close">✕</button><h2 id="title">Меню</h2><p id="text"></p></div></div>
+<script>
+const p=document.getElementById('player'),joy=document.getElementById('joy'),knob=document.getElementById('knob');let x=50,y=50,down=false;
+function mv(e){let r=joy.getBoundingClientRect(),dx=e.clientX-(r.left+r.width/2),dy=e.clientY-(r.top+r.height/2),m=r.width*.3,l=Math.hypot(dx,dy)||1;if(l>m){dx=dx/l*m;dy=dy/l*m}knob.style.transform=`translate(${dx}px,${dy}px)`;x=Math.max(5,Math.min(95,x+dx/r.width*5));y=Math.max(8,Math.min(92,y+dy/r.height*5));p.style.left=x+'%';p.style.top=y+'%'}
+joy.addEventListener('pointerdown',e=>{down=true;joy.setPointerCapture(e.pointerId);mv(e)});joy.addEventListener('pointermove',e=>{if(down)mv(e)});joy.addEventListener('pointerup',()=>{down=false;knob.style.transform='translate(0,0)'});
+const panel=document.getElementById('panel'),title=document.getElementById('title'),text=document.getElementById('text');
+const info={chat:['Чат','Чат работает локально. Онлайн подключим следующим этапом.'],map:['Карта','Ты находишься в центре города.'],menu:['Меню','Профиль · Инвентарь · Настройки'],action:['Действие','Рядом можно взаимодействовать с магазином, полицией и больницей. Подойди ближе и нажми «Действие».'],auto:['Авто','Машина готова к поездке.'],tune:['Тюнинг','Тюнинг добавим следующим этапом.'],auction:['Аукцион','Аукцион добавим следующим этапом.'],casino:['Казино','🎰 Только виртуальные фишки. Реальных денег нет.'],job:['Работа','Такси · Доставка · Дальнобойщик']};
+document.querySelectorAll('[data-a]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();let a=b.dataset.a;if(a==='close'){panel.style.display='none';return}title.textContent=info[a][0];text.textContent=info[a][1];panel.style.display='block'}));
+</script></body></html>
